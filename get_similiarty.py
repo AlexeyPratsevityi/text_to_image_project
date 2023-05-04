@@ -20,8 +20,9 @@ def get_similiarity(prompt, model_resnet, model_vit,  top_k=3):
     for i in idx:
         image_files.append(raw_dataset.imgs[i][0])
 
-    #image_arr_vit = <path>
-    text_emb_vit = model_vit.encode_text(inputs)
+    image_arr_vit = np.loadtxt('embeddings_vit.csv', delimiter=",")
+    inputs_vit = clip.tokenize(prompt).to(device)
+    text_emb_vit = model_vit.encode_text(inputs_vit)
     text_emb_vit = text_emb_vit.cpu().detach().numpy()
     scores_vit = np.dot(text_emb_vit, image_arr_vit.T)
     idx_vit = np.argsort(-scores_vit[0])[:top_k]
@@ -30,3 +31,8 @@ def get_similiarity(prompt, model_resnet, model_vit,  top_k=3):
         image_files_vit.append(raw_dataset.imgs[i][0])
 
     return image_files, image_files_vit
+# def get_text_enc(input_text: str):
+#     text = clip.tokenize([input_text]).to(device)
+#     text_features = model.encode_text(text).cpu()
+#     text_features = text_features.cpu().detach().numpy()
+#     return text_features
