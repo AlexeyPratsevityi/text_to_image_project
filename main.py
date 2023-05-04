@@ -12,14 +12,15 @@ from get_similiarty import get_similiarity
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 #load model -resnet50
+
+
 model_resnet, preprocess = clip.load("RN50", device)
+
 #load model - ViT-B/32
 model_vit, preprocess = clip.load('ViT-B/32', device)
 
 
 st.title('Find my pic!')
-
-
 
 def find_image_disc(prompt, df):
     img_descs = []
