@@ -1,37 +1,67 @@
 import streamlit as st
 
-import pandas as pd 
+import pandas as pd
 
-import glob
+import clip
+import torchvision.transforms as transforms
+import torchvision.datasets as datasets
+import torch
+import numpy as np
 import random
+from get_similiarty import get_similiarity
+
+
+#load model -resnet50
+model_resnet = torch.load('model.pt')
+
+#load model - ViT-B/32
+#model_vit = <path_model>
+
 
 st.title('Find my pic!')
 
-def load_image():
-    '''
-    Function for downloading pictures from folder "img"
-    '''
-    image_files = glob.glob("img/*.jpg")
-    return image_files
 
-def random_image(image_files, df):
-    '''
-    Function return list of 5 random pictures names from img-folder with 
-    1 of 5 desciptions from results.csv
-    '''
-    rand_images = []
-    img_desc = []
+# def get_similiarity(prompt, top_k=3):
+#     image_arr = np.loadtxt("embeddings.csv", delimiter=",")
+#     raw_dataset = datasets.ImageFolder(data_dir)
+#     # получите список всех изображений
+#     # create transformer-readable tokens
+#     inputs = clip.tokenize(prompt).to(device)
+#     text_emb = model_resnet.encode_text(inputs)
+#     text_emb = text_emb.cpu().detach().numpy()
+#     scores = np.dot(text_emb, image_arr.T)
+#     #score_vit
+#     # get the top k indices for most similar vecs
+#     idx = np.argsort(-scores[0])[:top_k]
+#     image_files = []
+#     for i in idx:
+#         image_files.append(raw_dataset.imgs[i][0])
+#
+#
+#     #image_arr_vit = <path>
+#     # text_emb_vit = model_vit.encode_text(inputs)
+#     # text_emb_vit = text_emb_vit.cpu().detach().numpy()
+#     # scores_vit = np.dot(text_emb_vit, image_arr_vit.T)
+#     # idx_vit = np.argsort(-scores_vit[0])[:top_k]
+#     # image_files_vit = []
+#     # for i in idx_vit:
+#     #     image_files_vit.append(raw_dataset.imgs[i][0])
+#
+#     return image_files#, image_files_vit
 
-    while len(rand_images)<5:
-        rand_pic = random.choice(image_files)
-        if rand_pic not in rand_images:
-            rand_images.append(rand_pic)
-            img_desc.append(random.choice(df[df['image_name']==rand_pic.split('/')[-1]]['comment'].values).replace('.',''))
-            
-        else:
-            continue
 
-    return rand_images, img_desc
+def find_image_disc(prompt, df):
+    img_descs = []
+    img_descs_vit = []
+    list_images_names, list_images_names_vit  = get_similiarity(prompt)
+    list_images_names = get_similiarity(prompt, model_resnet, model_vit, 3)
+    for img in list_images_names:
+        img_descs.append(random.choice(df[df['image_name'] == img.split('/')[-1]]['comment'].values).replace('.', ''))
+    #vit
+    for img in list_images_names_vit:
+        img_descs_vit.append(random.choice(df[df['image_name'] == img.split('/')[-1]]['comment'].values).replace('.', ''))
+
+    return list_images_names, img_descs, list_images_names_vit, img_descs_vit
 
 txt = st.text_area("Describe the picture you'd like to see")
 
@@ -40,18 +70,16 @@ df = pd.read_csv('results.csv',
                  names = ['image_name', 'comment_number', 'comment'], 
                  header=0)
 
-image_files = load_image()
 
 if txt is not None:
-    # col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
-    # with col7:
      if st.button('Find!'):
-        rand_images, img_desc = random_image(image_files, df)
+
+        list_images, img_desc, list_images_vit, img_descs_vit = find_image_disc(txt, df)
         col1, col2 = st.columns(2)
-        for ind, pic in enumerate(rand_images):
-            if ind%2!=0:
-                col2.image(pic)
-                col2.write(img_desc[ind])
-            else:
-                col1.image(pic)
-                col1.write(img_desc[ind])
+        for ind, pic in enumerate(zip(list_images, list_images_vit)):
+            with col1:
+                st.image(pic[0])
+                st.write(img_desc[ind])
+            with col2:
+                st.image(pic[1])
+                st.write(img_desc[ind])
