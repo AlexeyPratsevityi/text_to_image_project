@@ -12,7 +12,7 @@ from get_similiarty import get_similiarity
 
 
 #load model -resnet50
-model_resnet = torch.load('model.pt')
+model_resnet, processor = clip.load("RN50", device=device)
 
 #load model - ViT-B/32
 #model_vit = <path_model>
@@ -53,7 +53,6 @@ st.title('Find my pic!')
 def find_image_disc(prompt, df):
     img_descs = []
     img_descs_vit = []
-    list_images_names, list_images_names_vit  = get_similiarity(prompt)
     list_images_names = get_similiarity(prompt, model_resnet, model_vit, 3)
     for img in list_images_names:
         img_descs.append(random.choice(df[df['image_name'] == img.split('/')[-1]]['comment'].values).replace('.', ''))
