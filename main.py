@@ -10,51 +10,21 @@ import numpy as np
 import random
 from get_similiarty import get_similiarity
 
-
+device = "cuda" if torch.cuda.is_available() else "cpu"
 #load model -resnet50
-model_resnet = torch.load('model.pt')
-
+model_resnet, preprocess = clip.load("RN50", device)
 #load model - ViT-B/32
-#model_vit = <path_model>
+model_vit, preprocess = clip.load('ViT-B/32', device)
 
 
 st.title('Find my pic!')
 
 
-# def get_similiarity(prompt, top_k=3):
-#     image_arr = np.loadtxt("embeddings.csv", delimiter=",")
-#     raw_dataset = datasets.ImageFolder(data_dir)
-#     # получите список всех изображений
-#     # create transformer-readable tokens
-#     inputs = clip.tokenize(prompt).to(device)
-#     text_emb = model_resnet.encode_text(inputs)
-#     text_emb = text_emb.cpu().detach().numpy()
-#     scores = np.dot(text_emb, image_arr.T)
-#     #score_vit
-#     # get the top k indices for most similar vecs
-#     idx = np.argsort(-scores[0])[:top_k]
-#     image_files = []
-#     for i in idx:
-#         image_files.append(raw_dataset.imgs[i][0])
-#
-#
-#     #image_arr_vit = <path>
-#     # text_emb_vit = model_vit.encode_text(inputs)
-#     # text_emb_vit = text_emb_vit.cpu().detach().numpy()
-#     # scores_vit = np.dot(text_emb_vit, image_arr_vit.T)
-#     # idx_vit = np.argsort(-scores_vit[0])[:top_k]
-#     # image_files_vit = []
-#     # for i in idx_vit:
-#     #     image_files_vit.append(raw_dataset.imgs[i][0])
-#
-#     return image_files#, image_files_vit
-
 
 def find_image_disc(prompt, df):
     img_descs = []
     img_descs_vit = []
-    list_images_names, list_images_names_vit  = get_similiarity(prompt)
-    list_images_names = get_similiarity(prompt, model_resnet, model_vit, 3)
+    list_images_names, list_images_names_vit = get_similiarity(prompt, model_resnet, model_vit, 3)
     for img in list_images_names:
         img_descs.append(random.choice(df[df['image_name'] == img.split('/')[-1]]['comment'].values).replace('.', ''))
     #vit
