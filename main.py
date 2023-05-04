@@ -14,10 +14,10 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 #load model -resnet50
 
 
-model_resnet, preprocess = clip.load("RN50", device)
+model_resnet = torch.load("model.pt", device )
 
 #load model - ViT-B/32
-model_vit, preprocess = clip.load('ViT-B/32', device)
+model_vit = torch.load("model_vit.pt", device )
 
 
 st.title('Find my pic!')
